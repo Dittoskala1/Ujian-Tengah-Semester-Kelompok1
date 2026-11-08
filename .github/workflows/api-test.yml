@@ -1,0 +1,39 @@
+name: API Automation Test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  newman:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Pasang Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Pasang Newman dan reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Jalankan collection
+        run: |
+          newman run "DummyJSON Auth Testing.postman_collection.json" \
+            -e "DummyJSON.postman_environment.json" \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export newman/report.html \
+            --reporter-htmlextra-title "DummyJSON Auth Testing"
+
+      - name: Simpan laporan HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report
+          path: newman/report.html
